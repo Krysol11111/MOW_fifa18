@@ -37,5 +37,44 @@ getData <- function(){
 # remove useless columns i.e. club logo 
   complete <- complete[ , !names(complete) %in% c("flag","club_logo","photo", "name", "full_name", "ID", "real_face", "body_type", "flag", "photo", "birth_date" )]
 
+# combine position attributes
+#   prefered positions
+  complete$prefers_front <- apply(complete[,c('prefers_rs','prefers_rw','prefers_st','prefers_lw','prefers_cf','prefers_ls')] == "True", 1, any)
+  complete$prefers_mid <- apply(complete[,c('prefers_rf','prefers_ram','prefers_rcm','prefers_rm','prefers_rdm','prefers_cam','prefers_cm','prefers_lm','prefers_cdm','prefers_lf','prefers_lam','prefers_lcm','prefers_ldm')] == "True", 1, any)
+  complete$prefers_back <- apply(complete[,c('prefers_rcb','prefers_rb','prefers_rwb','prefers_cb','prefers_lb','prefers_lwb','prefers_lcb')] == "True", 1, any)
+#  sum(apply(complete[,c('prefers_front','prefers_mid','prefers_back')],1,all))
+#  complete = subset(complete,apply(complete[,c('prefers_front','prefers_mid','prefers_back')],1,all))
+
+#   position scores
+  complete$score_front <- apply(complete[,c('rs','rw','st','lw','cf','ls')], 1, mean)
+  complete$score_mid <- apply(complete[,c('rf','ram','rcm','rm','rdm','cam','cm','lm','cdm','lf','lam','lcm','ldm')], 1, mean)
+  complete$score_back <- apply(complete[,c('rcb','rb','rwb','cb','lb','lwb','lcb')], 1, mean)
+  
+  classes = matrix("",nrow = nrow(complete),ncol = 1)
+  minimum_score_diff = 5
+  for (i in 1:nrow(complete)) {
+    class = "MULTITOOL"
+    if (complete$gk[i] != 0){
+      class = "GOALKEEPER"
+      classes[i] = class
+      next
+    }
+    if (complete$score_front[i] > complete$score_mid[i] && complete$score_front[i] > complete$score_back[i] && abs(complete$score_front[i] - complete$score_mid[i]) > minimum_score_diff && abs(complete$score_front[i] - complete$score_back[i]) > minimum_score_diff){
+      class = "FRONT"
+    }
+    
+    if (complete$score_mid[i] > complete$score_front[i] && complete$score_mid[i] > complete$score_back[i] && abs(complete$score_front[i] - complete$score_mid[i]) > minimum_score_diff && abs(complete$score_mid[i] - complete$score_back[i]) > minimum_score_diff){
+      class = "MID"
+    }
+    
+    if (complete$score_back[i] > complete$score_mid[i] && complete$score_back[i] > complete$score_front[i] && abs(complete$score_back[i] - complete$score_mid[i]) > minimum_score_diff && abs(complete$score_front[i] - complete$score_back[i]) > minimum_score_diff){
+      class = "BACK"
+    }
+    classes[i] = class
+  }
+  sum(classes == "GOALKEEPER")
+  as.data.frame(table(classes))
+  
+
   return(complete)
 }

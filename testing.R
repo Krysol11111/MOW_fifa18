@@ -12,4 +12,29 @@ findCorrelation(complete.filtered) # nie będzie działać, bo pluje się, że s
 complete.filtered <- complete.filtered[ , !names(complete.filtered) %in% c("flag","club_logo","photo")]
 
 # dla testów okroić zestaw danych
-complete.filtered <- head(complete.filtered,50)
+complete <- head(complete,50)
+
+# get full names
+nameData = complete[,3]
+
+# count them
+nameFreq = as.data.frame(table(nameData))
+
+# get repeated
+repeatedNames = subset(nameFreq, Freq > 1)[,1]
+nrow(subset(nameFreq, Freq > 1))
+
+# erase repeating values from data
+complete.filtered <- subset(complete, !full_name %in% repeatedNames)
+
+
+
+max(complete$eur_value)
+
+discretize(complete$overall)
+table(discretize(complete$overall, method="frequency", breaks = 10))
+
+complete$name[duplicated(complete$name)]
+#   count duplicated entries
+sum(duplicated(complete$name))
+
