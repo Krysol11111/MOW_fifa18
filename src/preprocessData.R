@@ -37,8 +37,5 @@ getData <- function(){
 # remove useless columns i.e. club logo 
   complete <- complete[ , !names(complete) %in% c("flag","club_logo","photo", "name", "full_name", "ID", "real_face", "body_type", "flag", "photo", "birth_date" )]
 
-# discretize overall score or other attributes (possible methods like uniform distribution or equal subsets)
-# normalize/scale data if neccessary
-
   return(complete)
 }
