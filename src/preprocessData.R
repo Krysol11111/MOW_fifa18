@@ -27,15 +27,12 @@ complete <- complete[,!column.has.na,]
 
 # check duplicates
 #   get full names
-nameData = complete[,3]
-#   count them
-nameFreq = as.data.frame(table(nameData))
-#   get repeated
-repeatedNames = subset(nameFreq, Freq > 1)[,1]
-nrow(subset(nameFreq, Freq > 1))
+complete$full_name[duplicated(complete$full_name)]
+#   count duplicated entries
+sum(duplicated(complete$full_name))
 
 # remove duplicates
-complete.filtered <- subset(complete, !full_name %in% repeatedNames)
+complete = complete[!duplicated(complete$full_name),]
 
 # remove useless columns i.e. club logo 
 complete <- complete[ , !names(complete) %in% c("flag","club_logo","photo", "name", "full_name", "ID", "real_face", "body_type", "flag", "photo", "birth_date" )]
