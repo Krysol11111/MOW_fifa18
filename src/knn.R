@@ -16,17 +16,19 @@ confusionMatrix(test_pred, factor(testLabels) )
 
 # get train set, labels set, test set and 'k' as parameters
 
-
-knn <- function(trainSet, labels, testSet, testLabels, k){
+# k can be a vector!!!
+knn <- function(trainSet, labels, testSet, testLabels, k = 3){
   library(caret)
   library(e1071)
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
   trainSet$labels <- labels
   
 # invoke knn with given parameters
+  grid = expand.grid(k = k)
+  
   model <- train(labels ~., data = trainSet, method = "knn",
                  trControl=trctrl,
-                 tuneLength = k)
+                  tuneGrid=grid)
 # return trained model
   return(model)
 # optionally use test set on trained model (it could be performed inside cross validation)

@@ -19,16 +19,16 @@ confusionMatrix(test_pred, factor(testLabels) )
 
 
 # get train set, labels set, test set and other algorithm variables as parameters
-bayes <- function(trainSet, labels, testSet, testLabels){
+bayes <- function(trainSet, labels, testSet, testLabels, fL = 0, usekernel = FALSE, adjust = 1){
   library(caret)
   library(e1071)
   trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
   trainSet$labels <- labels
   
   # invoke bayes with given parameters
+  grid <- data.frame(fL=fL, usekernel = usekernel, adjust=adjust)
   model <- train(labels ~., data = trainSet, method = "nb",
-                 trControl=trctrl,
-                 tuneLength = k)
+                 trControl=trctrl)
   # return trained model 
   return(model)
   # optionally use test set on trained model (it could be performed inside cross validation)
