@@ -1,6 +1,16 @@
+source("./src/preprocessData.R")
+source("./src/bayes.R")
+source("./src/knn.R")
+source("./src/randomForest.R")
+source("./src/selection.R")
+source("./src/utils.R")
+source("./src/visualization.R")
 
 #load complete csv
+library(readr)
+complete <- read_csv("./data/complete.csv")
 #preprocess complete (pass complete to preprocess, loading should be performed here!)
+complete <- preprocessData(complete)
 #use cross validation on complete (outer loop)
 # split complete to train and test set
 # discretize 'classification attribute' i.e. overall score 

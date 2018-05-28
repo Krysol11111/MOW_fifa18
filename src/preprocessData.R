@@ -1,7 +1,5 @@
-getData <- function(){
-# get data from complete
-  library(readr)
-  complete <- read_csv("./data/complete.csv")
+preprocessData <- function(complete){
+
 # check NA
   column.has.na <- apply(complete, 2, function(x){any(is.na(x))})
   column.has.na[column.has.na]
@@ -32,7 +30,7 @@ getData <- function(){
   sum(duplicated(complete$full_name))
 
 # remove duplicates
-  complete = complete[!duplicated(complete$full_name),]
+  complete <- complete[!duplicated(complete$full_name),]
 
 # remove useless columns i.e. club logo 
   complete <- complete[ , !names(complete) %in% c("flag","club_logo","photo", "name", "full_name", "ID", "real_face", "body_type", "flag", "photo", "birth_date" )]
@@ -50,7 +48,7 @@ getData <- function(){
   complete$score_mid <- apply(complete[,c('rf','ram','rcm','rm','rdm','cam','cm','lm','cdm','lf','lam','lcm','ldm')], 1, mean)
   complete$score_back <- apply(complete[,c('rcb','rb','rwb','cb','lb','lwb','lcb')], 1, mean)
   
-  classes = matrix("",nrow = nrow(complete),ncol = 1)
+  classes <- matrix("",nrow = nrow(complete),ncol = 1)
   minimum_score_diff = 5
   for (i in 1:nrow(complete)) {
     class = "MULTITOOL"
@@ -72,8 +70,8 @@ getData <- function(){
     }
     classes[i] = class
   }
-  sum(classes == "GOALKEEPER")
-  as.data.frame(table(classes))
+#  sum(classes == "GOALKEEPER")
+#  as.data.frame(table(classes))
   
 
   return(complete)
