@@ -70,6 +70,7 @@ preprocessData <- function(complete){
     }
     classes[i] = class
   }
+  complete$label <- classes
 #  sum(classes == "GOALKEEPER")
 #  as.data.frame(table(classes))
   
