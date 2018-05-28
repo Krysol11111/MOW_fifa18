@@ -1,5 +1,10 @@
-# use pca to reduce attributes
-# use ranking method or something else to evaluate attributes and select the best subset
+# get data as input
+# compute correlation matrix for attributes, watch out for attributes types because we have 
+# numerical, logical and character data
+# find correlation between attributes and remove redundant examples
+# use pca to reduce the number of attributes
+# use ranking method (or somethin else) to evaluate attributes and select the best subset
+# return data with selected attributes
 
 selectedAttributes <- function(){
   library(readr)
@@ -18,17 +23,6 @@ selectedAttributes <- function(){
   which(sapply(complete, is.character))
   complete[,84:174] <- sapply(complete[,84:174],as.logical)
   complete[,84:174] <- sapply(complete[,84:174],as.integer)
-  
-  uniqueClubs = unique(complete$club)
-  uniqueNationality = unique(complete$nationality)
-  uniqueWorkRateAtt = unique(complete$work_rate_att)
-  uniqueWorkRateDef = unique(complete$work_rate_def)
-  uniquePreferredFoot = unique(complete$preferred_foot)
-  complete$club.num = as.numeric(factor(complete$club, levels = c(uniqueClubs)))
-  complete$nationality.num = as.numeric(factor(complete$nationality, levels = c(uniqueNationality)))
-  complete$work_rate_att.num = as.numeric(factor(complete$work_rate_att, levels = c(uniqueWorkRateAtt)))
-  complete$work_rate_def.num = as.numeric(factor(complete$work_rate_def, levels = c(uniqueWorkRateDef)))
-  complete$preferred_foot.num = as.numeric(factor(complete$preferred_foot, levels = c(uniquePreferredFoot)))
   
   
   correlationMatrix <- cor(complete[,-which(sapply(complete,is.character))])
