@@ -1,7 +1,7 @@
-preprocessData <- function(complete){
+preprocessData <- function(dataSet){
 
 # check NA
-  column.has.na <- apply(complete, 2, function(x){any(is.na(x))})
+  column.has.na <- apply(dataSet, 2, function(x){any(is.na(x))})
   column.has.na[column.has.na]
   sum(column.has.na)
 
@@ -10,70 +10,82 @@ preprocessData <- function(complete){
 # just use default value i.e. minimum value or 0
 
 #   changing NAs to 0s for position scores 
-  complete[, 68:94][is.na(complete[, 68:94])] <- 0
-# column.has.na <- apply(complete, 2, function(x){any(is.na(x))})
+  dataSet[, 68:94][is.na(dataSet[, 68:94])] <- 0
+# column.has.na <- apply(dataSet, 2, function(x){any(is.na(x))})
 # sum(column.has.na)
 
 #   4 columns with NAs left: club, club_logo, league, eur_release_clause
 
 #   fill club column with "None" instead of NAs
-  complete[, 4][is.na(complete[, 4])] <- "None"
+  dataSet[, 4][is.na(dataSet[, 4])] <- "None"
 #   remove remaining columns with NAs
-  column.has.na <- apply(complete, 2, function(x){any(is.na(x))})
+  column.has.na <- apply(dataSet, 2, function(x){any(is.na(x))})
 # sum(column.has.na)
-  complete <- complete[,!column.has.na,]
+  dataSet <- dataSet[,!column.has.na,]
 
 # check duplicates
 #   get full names
-  complete$full_name[duplicated(complete$full_name)]
+  dataSet$full_name[duplicated(dataSet$full_name)]
 #   count duplicated entries
-  sum(duplicated(complete$full_name))
+  sum(duplicated(dataSet$full_name))
 
 # remove duplicates
-  complete <- complete[!duplicated(complete$full_name),]
+  dataSet <- dataSet[!duplicated(dataSet$full_name),]
 
 # remove useless columns i.e. club logo 
-  complete <- complete[ , !names(complete) %in% c("flag","club_logo","photo", "name", "full_name", "ID", "real_face", "body_type", "flag", "photo", "birth_date" )]
+  dataSet <- dataSet[ , !names(dataSet) %in% c("flag","club_logo","photo", "name", "full_name", "ID", "real_face", "body_type", "flag", "photo", "birth_date" )]
 
 # combine position attributes
 #   prefered positions
-  complete$prefers_front <- apply(complete[,c('prefers_rs','prefers_rw','prefers_st','prefers_lw','prefers_cf','prefers_ls')] == "True", 1, any)
-  complete$prefers_mid <- apply(complete[,c('prefers_rf','prefers_ram','prefers_rcm','prefers_rm','prefers_rdm','prefers_cam','prefers_cm','prefers_lm','prefers_cdm','prefers_lf','prefers_lam','prefers_lcm','prefers_ldm')] == "True", 1, any)
-  complete$prefers_back <- apply(complete[,c('prefers_rcb','prefers_rb','prefers_rwb','prefers_cb','prefers_lb','prefers_lwb','prefers_lcb')] == "True", 1, any)
-#  sum(apply(complete[,c('prefers_front','prefers_mid','prefers_back')],1,all))
-#  complete = subset(complete,apply(complete[,c('prefers_front','prefers_mid','prefers_back')],1,all))
+  dataSet$prefers_front <- apply(dataSet[,c('prefers_rs','prefers_rw','prefers_st','prefers_lw','prefers_cf','prefers_ls')] == "True", 1, any)
+  dataSet$prefers_mid <- apply(dataSet[,c('prefers_rf','prefers_ram','prefers_rcm','prefers_rm','prefers_rdm','prefers_cam','prefers_cm','prefers_lm','prefers_cdm','prefers_lf','prefers_lam','prefers_lcm','prefers_ldm')] == "True", 1, any)
+  dataSet$prefers_back <- apply(dataSet[,c('prefers_rcb','prefers_rb','prefers_rwb','prefers_cb','prefers_lb','prefers_lwb','prefers_lcb')] == "True", 1, any)
+  dataSet <- dataSet[, !(names(dataSet) %in% c('prefers_rs','prefers_rw','prefers_st','prefers_lw','prefers_cf','prefers_ls','prefers_rf','prefers_ram','prefers_rcm','prefers_rm','prefers_rdm','prefers_cam','prefers_cm','prefers_lm','prefers_cdm','prefers_lf','prefers_lam','prefers_lcm','prefers_ldm','prefers_rcb','prefers_rb','prefers_rwb','prefers_cb','prefers_lb','prefers_lwb','prefers_lcb'))]
+  dataSet <- dataSet[, !grepl("speciality|trait", colnames(dataSet))]
+  
+  dataSet[,which(grepl("prefers", colnames(dataSet)))] <- lapply(dataSet[,which(grepl("prefers", colnames(dataSet)))], as.logical)
+  #  sum(apply(dataSet[,c('prefers_front','prefers_mid','prefers_back')],1,all))
+#  dataSet = subset(dataSet,apply(dataSet[,c('prefers_front','prefers_mid','prefers_back')],1,all))
 
 #   position scores
-  complete$score_front <- apply(complete[,c('rs','rw','st','lw','cf','ls')], 1, mean)
-  complete$score_mid <- apply(complete[,c('rf','ram','rcm','rm','rdm','cam','cm','lm','cdm','lf','lam','lcm','ldm')], 1, mean)
-  complete$score_back <- apply(complete[,c('rcb','rb','rwb','cb','lb','lwb','lcb')], 1, mean)
+  dataSet$score_front <- apply(dataSet[,c('rs','rw','st','lw','cf','ls')], 1, mean)
+  dataSet$score_mid <- apply(dataSet[,c('rf','ram','rcm','rm','rdm','cam','cm','lm','cdm','lf','lam','lcm','ldm')], 1, mean)
+  dataSet$score_back <- apply(dataSet[,c('rcb','rb','rwb','cb','lb','lwb','lcb')], 1, mean)
+  dataSet <- dataSet[, !(names(dataSet) %in% c('rs','rw','st','lw','cf','ls','rf','ram','rcm','rm','rdm','cam','cm','lm','cdm','lf','lam','lcm','ldm','rcb','rb','rwb','cb','lb','lwb','lcb'))]
   
-  classes <- matrix("",nrow = nrow(complete),ncol = 1)
+  classes <- matrix("",nrow = nrow(dataSet),ncol = 1)
   minimum_score_diff = 5
-  for (i in 1:nrow(complete)) {
-    class = "MULTITOOL"
-    if (complete$gk[i] != 0){
-      class = "GOALKEEPER"
+  for (i in 1:nrow(dataSet)) {
+    class = "Any"
+    if (dataSet$gk[i] != 0){
+      class = "Goalkeeper"
       classes[i] = class
       next
     }
-    if (complete$score_front[i] > complete$score_mid[i] && complete$score_front[i] > complete$score_back[i] && abs(complete$score_front[i] - complete$score_mid[i]) > minimum_score_diff && abs(complete$score_front[i] - complete$score_back[i]) > minimum_score_diff){
-      class = "FRONT"
+    if (dataSet$score_front[i] > dataSet$score_mid[i] && dataSet$score_front[i] > dataSet$score_back[i] && abs(dataSet$score_front[i] - dataSet$score_mid[i]) > minimum_score_diff && abs(dataSet$score_front[i] - dataSet$score_back[i]) > minimum_score_diff){
+      class = "Front"
     }
     
-    if (complete$score_mid[i] > complete$score_front[i] && complete$score_mid[i] > complete$score_back[i] && abs(complete$score_front[i] - complete$score_mid[i]) > minimum_score_diff && abs(complete$score_mid[i] - complete$score_back[i]) > minimum_score_diff){
-      class = "MID"
+    if (dataSet$score_mid[i] > dataSet$score_front[i] && dataSet$score_mid[i] > dataSet$score_back[i] && abs(dataSet$score_front[i] - dataSet$score_mid[i]) > minimum_score_diff && abs(dataSet$score_mid[i] - dataSet$score_back[i]) > minimum_score_diff){
+      class = "Mid"
     }
     
-    if (complete$score_back[i] > complete$score_mid[i] && complete$score_back[i] > complete$score_front[i] && abs(complete$score_back[i] - complete$score_mid[i]) > minimum_score_diff && abs(complete$score_front[i] - complete$score_back[i]) > minimum_score_diff){
-      class = "BACK"
+    if (dataSet$score_back[i] > dataSet$score_mid[i] && dataSet$score_back[i] > dataSet$score_front[i] && abs(dataSet$score_back[i] - dataSet$score_mid[i]) > minimum_score_diff && abs(dataSet$score_front[i] - dataSet$score_back[i]) > minimum_score_diff){
+      class = "Back"
     }
     classes[i] = class
   }
-  complete$label <- classes
-#  sum(classes == "GOALKEEPER")
-#  as.data.frame(table(classes))
+  dataSet$label <- classes
   
+  dataSet$club <- as.factor(dataSet$club)
+  dataSet$nationality <- as.factor(dataSet$nationality)
+  dataSet$work_rate_att <- factor(dataSet$work_rate_att, levels = c("Low","Medium","High"), ordered = TRUE)
+  dataSet$work_rate_def <- factor(dataSet$work_rate_def, levels = c("Low","Medium","High"), ordered = TRUE)
+  dataSet$preferred_foot <- as.factor(dataSet$preferred_foot)
+  dataSet$label <- as.factor(dataSet$label)
+  
+  #cleaning environmental variables
+  rm(classes,class,column.has.na,i,minimum_score_diff)
 
-  return(complete)
+  return(dataSet)
 }
