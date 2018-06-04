@@ -22,6 +22,9 @@ evaluation.pred.bayes <- list()
 evaluation.model.rf <- list() 
 evaluation.pred.rf <- list() 
 evaluation.testLabels <- list() 
+evaluation.cm.knn <- list()
+evaluation.cm.bayes <- list()
+evaluation.cm.rf <- list()
 folds <- createFolds(data$overall, k = 4)
 
 #use cross validation on complete (outer loop)
@@ -29,40 +32,39 @@ for (i in 1:4)
 {
   print(paste("Fold #",i))
   # split complete to train and test set
-  train <- data[folds[[i]],]
-  test <- data[-folds[[i]],]
+  train <- data[-folds[[i]],]
+  test <- data[folds[[i]],]
   # discretize 'classification attribute' i.e. overall score 
-  #freq_discr <- discretize(train$overall,method = "frequency", breaks = 10, ordered_result = TRUE)
-  #inter_discr <- discretize(train$overall, method = "interval", breaks = 10, ordered_result = TRUE) 
-  #cluster_discr <- discretize(train$overall, method = "cluster", breaks = 10, ordered_result = TRUE)
-  #table(freq_discr)
-  #table(inter_discr)
-  #table(cluster_discr)
-  #train$overall <- as.factor(cluster_discr)
+  #freq_discr <- discretize(train$overall,breaks = 10, method = "frequency",infinity = TRUE,include.lowest = FALSE,right = FALSE, ordered_result = TRUE, onlycuts = TRUE)
+  inter_discr <- discretize(train$overall,breaks = 10, method = "interval",infinity = TRUE,include.lowest = FALSE,right = FALSE, ordered_result = TRUE, onlycuts = TRUE) 
+  #cluster_discr <- discretize(train$overall,breaks = 10, method = "cluster",infinity = TRUE,include.lowest = FALSE,right = FALSE, ordered_result = TRUE, onlycuts = TRUE)
+
+  train$overall <- cut(train$overall, inter_discr)
+  test$overall <- cut(test$overall, inter_discr)
   print(paste("---------------------------------------------"))
   print(paste("Attributes Selection"))
   # use attributes selection
-  train <- selectedAttributes(train, train$label)
+  train <- selectedAttributes(train, train$overall)
   
   test <- test[,names(train)]
-  trainLabels <- train$label
-  testLabels <- test$label
+  trainLabels <- train$overall
+  testLabels <- test$overall
   # possible inner loop cross validation for algorithm evaluation (I am not sure if it is necessary)
   # invoke 1 of 3 (or all 3) algorithms with train set - knn, bayes, randomForest with parameters
   print(paste("---------------------------------------------"))
   print(paste("K-NN"))
   #knn
-  knn_model <- knn("label", train,trainLabels,test,testLabels,3)
+  knn_model <- knn("overall", train,trainLabels,test,testLabels,3)
   knn_test_pred <- predict(knn_model, newdata = test)
   print(paste("---------------------------------------------"))
   print(paste("Naiive Bayes"))
   #Bayes
-  bayes_model <- bayes("label",train,trainLabels,test,testLabels)
+  bayes_model <- bayes("overall",train,trainLabels,test,testLabels)
   bayes_test_pred <- predict(bayes_model, newdata = test)
   print(paste("---------------------------------------------"))
   print(paste("Random Forest"))
   #RandomForest
-  randomForest_model <- randomForest("label",train,trainLabels,test,testLabels,3)
+  randomForest_model <- randomForest("overall",train,trainLabels,test,testLabels,3)
   rf_test_pred <- predict(randomForest_model, newdata = test)
   print(paste("---------------------------------------------"))
   # test model
@@ -73,16 +75,19 @@ for (i in 1:4)
   evaluation.model.rf[[i]] <- randomForest_model
   evaluation.pred.rf[[i]] <-rf_test_pred
   evaluation.testLabels[[i]] <- testLabels
-  
+  evaluation.cm.knn[[i]] <- confusionMatrix(knn_test_pred, testLabels)
+  evaluation.cm.bayes[[i]] <- confusionMatrix(bayes_test_pred, testLabels)
+  evaluation.cm.rf[[i]] <- confusionMatrix(rf_test_pred, testLabels)
+  break()
   # repeat for another fold
 }
 
 print(paste("DONE"))
-for (i in 1:4)
-{
-  print(paste(evaluation.model.rf[[i]]$results$Accuracy))
-  #confusionMatrix(evaluation.pred.knn[[i]],evaluation.testLabels[[i]]) 
-}
 
-
+knn_accs <- lapply(evaluation.cm.knn, function(x) x$overall['Accuracy'])
+mean_knn_acc <- mean(as.numeric(knn_accs))
+bayes_accs <- lapply(evaluation.cm.bayes, function(x) x$overall['Accuracy'])
+mean_bayes_acc <- mean(as.numeric(bayes_accs))
+rf_accs <- lapply(evaluation.cm.rf, function(x) x$overall['Accuracy'])
+mean_rf_acc <- mean(as.numeric(rf_accs))
 # invoke data analysis and vizualization
