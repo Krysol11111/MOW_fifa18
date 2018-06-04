@@ -1,5 +1,5 @@
 library(dplyr)
-library(ROCR)
+library(pROC)
 # probably it should be renamed to dataAnalysis or something similar
 # we need to compute all matrixes, variables and other stuff to see some correlation etc.
 # then use those matrixes and variables to generate interesting plots which will support our hypothesis
@@ -13,14 +13,27 @@ Labels <- sort(sapply(k,median))
 axis(side = 1,las=2,labels = names(Labels),
      at = 1:ncol(finalBoruta$ImpHistory), cex.axis = 0.7)
 
+category = c(evaluation.pred.bayes[[1]])
+lev <- factor(test$overall,ordered = TRUE,levels(test$overall))
+baba <- multiclass.roc(category, c(lev))
+auc(baba)
+rs <- baba[['rocs']]
+plot.roc(rs[[1]], legacy.axes = TRUE, print.auc = TRUE)  
+sapply(2:length(rs),function(i) lines.roc(rs[[i]],col=i))
 
 category = c(evaluation.pred.knn[[1]])
 pred = rev(seq_along(category))
 rocobject = multiclass.roc(category, pred)
 auc(rocobject)
 rs <- rocobject[['rocs']]
-plot.roc(rs[[1]])
+plot.roc(rs[[1]], legacy.axes = TRUE, print.auc = TRUE)  
 sapply(2:length(rs),function(i) lines.roc(rs[[i]],col=i))
+
+ggroc(rs[[1]], legacy.axes = TRUE, color = "red") 
+#aaa <- sapply(1:length(rs), function(i) list(as.character(i)=rs[[i]]))
+aucs <- sapply(1:length(rs),function(i) auc(rs[[i]]$response,rs[[i]]$predictor))
+mean_auc <- mean(aucs)
+ggroc(list(rs1=rs[[1]],rs2=rs[[2]],rs3=rs[[3]]), legacy.axes = TRUE)
 #########
 ggplot(data,aes(x = age,y = overall-potential)) +
   geom_point(aes(color = factor(age))) + 
@@ -55,7 +68,6 @@ ggplot(data,aes(x = age, fill = factor(age))) +
 
 
 ######
-
 plot(evaluation.model.rf[[1]]$finalModel, col=1:8, main = "Final model", log="y")
 ########
 evaluation.model.knn[[1]]$results$model <- 't1'
